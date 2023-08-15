@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.ext import tasks
 from bs4 import BeautifulSoup
 
-BOT_TOKEN = "Your Token"
+BOT_TOKEN = "Your Bot Token"
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), case_insensitive=True)
 
@@ -38,6 +38,7 @@ async def find_patch_notes():
         last_PatchNotes = 'https://www.ubisoft.com' + updatesfeed_item.get('href')
         patch_notes_manager.update_patch_notes(last_PatchNotes)
         #When a new patch note is found, trigger the print_patch_notes function and update the patch note manager
+        print("Last patch notes:" + patch_notes_manager.get_last_patch_notes())
         if patch_notes_manager.get_last_patch_notes() != patch_notes_manager.get_prev_patch_notes():
             print("New patches found, printing")
             patch_notes_manager.update_prev_notes(patch_notes_manager.get_last_patch_notes())
@@ -49,7 +50,7 @@ async def print_patch_notes():
     for guild in bot.guilds:
         channel = guild.system_channel #getting system channel
         if channel.permissions_for(guild.me).send_messages: #making sure you have permissions
-            await channel.send(patch_notes_manager.get_last_patch_notes())
+            await channel.send("New R6 Patch Notes!\n" + patch_notes_manager.get_last_patch_notes())
 
 
 @bot.event
@@ -65,6 +66,7 @@ async def on_ready():
         print("prev patch notes: ", prev_PatchNotes)
     else:
         print("Last patch notes not found")
+    backround_patchnotes_checker.start()
     print("Hello world!")
 
 @tasks.loop(minutes=10.0, count=None)
@@ -72,10 +74,7 @@ async def backround_patchnotes_checker():
     print("Checking patch")
     await find_patch_notes()
 
-
-
 bot.remove_command("help")
-
 
 @bot.command()
 async def Help(ctx):
@@ -199,7 +198,5 @@ async def SeasonStats(ctx, username):
         await ctx.send(message)
     except requests.RequestException as e:
         await ctx.send(f"Error: Invalid Username")
-
-
 
 bot.run(BOT_TOKEN)
